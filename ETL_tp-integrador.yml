@@ -1,0 +1,48 @@
+resources:
+  jobs:
+    ETL_tp_integrador:
+      name: ETL_tp-integrador
+      schedule:
+        quartz_cron_expression: 41 0 21 * * ?
+        timezone_id: America/Buenos_Aires
+        pause_status: UNPAUSED
+      max_concurrent_runs: 2
+      tasks:
+        - task_key: crear_objetos
+          notebook_task:
+            notebook_path: /Workspace/TP_integrador2_Niderhaus/01Crear_Objetos
+            source: WORKSPACE
+        - task_key: cargar_archivos
+          depends_on:
+            - task_key: crear_objetos
+          notebook_task:
+            notebook_path: /Workspace/TP_integrador2_Niderhaus/02Cargar_Archivos
+            source: WORKSPACE
+        - task_key: orquestadora_silver
+          depends_on:
+            - task_key: crear_objetos
+          notebook_task:
+            notebook_path: /Workspace/TP_integrador2_Niderhaus/03Orquestadora_Silver
+            source: WORKSPACE
+        - task_key: ejecutora_silver
+          depends_on:
+            - task_key: orquestadora_silver
+            - task_key: cargar_archivos
+          notebook_task:
+            notebook_path: /Workspace/TP_integrador2_Niderhaus/04Ejecutora_Silver
+            source: WORKSPACE
+        - task_key: metrica_add-impression-click
+          depends_on:
+            - task_key: ejecutora_silver
+          notebook_task:
+            notebook_path: /Workspace/TP_integrador2_Niderhaus/05metrica_ad_impressions_clicks
+            source: WORKSPACE
+        - task_key: metrica_advertiser-impression
+          depends_on:
+            - task_key: ejecutora_silver
+          notebook_task:
+            notebook_path: /Workspace/TP_integrador2_Niderhaus/06metrica_advertiser_impressions
+            source: WORKSPACE
+      queue:
+        enabled: true
+      performance_target: PERFORMANCE_OPTIMIZED
